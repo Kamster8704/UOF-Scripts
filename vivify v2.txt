@@ -1,0 +1,153 @@
+//Adapted to cast Water Eles. Regs: blood moss, spider silk and mandrake.
+//It will also cast by scrolls if you have em into your backpack. will not restock (but its easy to config if you want, but its better just with regs)
+//Also you will need recall regs, this macro restock em too if in need.
+//****IMPORTANT! CHANGE THE TIMER ACCORDING TO YOUR RELIC LVL COOLDOWN*****
+////////////////
+//Setting up:
+//Get into a boat, go to a safe and non-busy place, drop your anchor.
+//Drop your regs into a bag at the bank box. (set it as your restock bag when prompted)
+//1 rune marked near a bank to restock regs from it. (leave at backpack and set it as your bankRune when prompted)
+//1 rune to your ship. (leave at backpack and set it as your shipRune when prompted)
+//Get back to bank and play it. Make the above settings when prompted.
+///////////////
+///////////////
+//set container, bank rune, and ship rune
+if not findalias 'restock'
+  promptalias 'restock'
+endif
+if not findalias 'bankRune'
+  promptalias 'bankRune'
+endif
+if not findalias 'shipRune'
+  promptalias 'shipRune'
+endif
+//recall to bank and restock regs
+if @counttype 0xf86 'any' 'backpack' < 30
+  pause 1000
+  cast 'recall'
+  pause 2000
+  target! 'bankRunebook'
+  pause 1000
+  msg 'bank'
+  if @movetype 0xf86 'restock' 'backpack' 0 0 0 'any' 200
+    pause 1500
+  else
+    sysmsg 'Out of regs!' 25
+    @canceltarget
+    stop
+  endif
+  if @movetype 0xf8d 'restock' 'backpack' 0 0 0 'any' 200
+    pause 1500
+  else
+    sysmsg 'Out of regs!' 25
+    @canceltarget
+    stop
+  endif
+  if @movetype 0xf7b 'restock' 'backpack' 0 0 0 'any' 200
+    pause 1500
+  else
+    sysmsg 'Out of regs!' 25
+    @canceltarget
+    stop
+  endif
+  //restock moss and pearl (recall regs)
+  if @counttype 0xf7a 'any' 'backpack' < 30
+    if @movetype 0xf7a 'restock' 'backpack' 0 0 0 'any' 50
+      pause 1500
+    else
+      sysmsg 'Out of regs!' 25
+      @canceltarget
+      stop
+    endif
+  endif
+  if @counttype 0xf7b 'any' 'backpack' < 30
+    if @movetype 0xf7b 'restock' 'backpack' 0 0 0 'any' 50
+      pause 1500
+    else
+      sysmsg 'Out of regs!' 25
+      @canceltarget
+      stop
+    endif
+  endif
+  if @counttype 0xf86 'any' 'backpack' < 30
+    if @movetype 0xf86 'restock' 'backpack' 0 0 0 'any' 50
+      pause 1500
+    else
+      sysmsg 'Out of regs!' 25
+      @canceltarget
+      stop
+    endif
+  endif
+  pause 2000
+  cast 'recall'
+  pause 4000
+  target! 'shipRune'
+  pause 2000
+  if @injournal 'The world will' 'system'
+    clearjournal
+    sysmsg 'Pausing macro for Server Save'
+    waitforjournal 'World save complete' 165000 'system'
+    sysmsg 'Resuming macro'
+  endif
+endif
+//create timers
+if not timerexists 'Vivify'
+  createtimer 'Vivify'
+  ////////////////////CHANGE THE TIMER BELOW ACCORDING TO YOUR RELIC LVL COOLDOWN (58000=58seconds)
+  ////////////////////CHANGE THE TIMER BELOW ACCORDING TO YOUR RELIC LVL COOLDOWN (58000=58seconds)
+  settimer 'Vivify' 58000
+endif
+//meditate if mana low
+clearjournal
+if mana < 10
+  useskill 'meditation'
+  while mana < 55
+    pause 1000
+  endwhile
+endif
+//if no ss @ backpack
+if not @findtype 0xf8d 'any' 'backpack'
+  break
+endif
+//if relics are down, wait
+if @injournal 'rest''system'
+  pause 57000
+  break
+endif
+//start vivify loop (need mandrake root to run this part)
+//check for mandrake root
+if @findtype 0xf86 'any' 'backpack'
+  ///////////////////CHANGE THE TIMER BELOW ACCORDING TO YOUR RELIC LVL COOLDOWN (58000=58seconds)
+  ///////////////////CHANGE THE TIMER BELOW ACCORDING TO YOUR RELIC LVL COOLDOWN (58000=58seconds)
+  while timer 'Vivify' >= 58000
+    clearjournal
+    //meditate if < 50 mana
+    if mana < 50
+      useskill 'meditation'
+      while mana < 55
+        pause 1000
+      endwhile
+    endif
+    //use water ele scrolls if you have them, else use regs
+    if @findtype 0x1f6c 'any' 'backpack'
+      usetype 0x1f6c any 'backpack'
+    else
+      cast "Summon Water Elemental"
+    endif
+    pause 4000
+    //release the water ele if found
+    if @findtype 0x10 'any' 'ground' 1 2
+      @setalias 'elemental' 'found'
+      waitforcontext 'elemental' 5 15000
+      pause 1000
+    endif
+    //reset Vivify timer if it procs
+    if @injournal 'Vivify: Activated.' 'system'
+      settimer 'Vivify' 0
+    endif
+    clearjournal
+    if not @findtype 0xf86 'any' 'backpack'
+      break
+    endif
+  endwhile
+endif

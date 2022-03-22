@@ -1,0 +1,62 @@
+if not findalias 'restock'
+  promptalias 'restock'
+endif
+//create timers
+if not timerexists 'Vivify'
+  createtimer 'Vivify'
+  ////////////////////CHANGE THE TIMER BELOW ACCORDING TO YOUR RELIC LVL COOLDOWN (58000=58seconds)
+  ////////////////////CHANGE THE TIMER BELOW ACCORDING TO YOUR RELIC LVL COOLDOWN (58000=58seconds)
+  settimer 'Vivify' 42000
+endif
+//meditate if mana low
+clearjournal
+if mana < 10
+  useskill 'meditation'
+  while mana < 55
+    pause 1000
+  endwhile
+endif
+if @counttype 0x1f6c 'any' 'backpack' < 1
+  if @movetype 0x1f6c 'restock' 'backpack' 0 0 0 'any' 25
+    pause 1500
+  else
+    sysmsg 'Out of scrolls!' 25
+    @canceltarget
+    stop
+  endif
+endif
+if @findtype 0x1f6c 'any' 'backpack'
+  ///////////////////CHANGE THE TIMER BELOW ACCORDING TO YOUR RELIC LVL COOLDOWN (58000=58seconds)
+  ///////////////////CHANGE THE TIMER BELOW ACCORDING TO YOUR RELIC LVL COOLDOWN (58000=58seconds)
+  while timer 'Vivify' >= 50000
+    clearjournal
+    //meditate if < 50 mana
+    if mana < 50
+      useskill 'meditation'
+      while mana < 55
+        pause 1000
+      endwhile
+    endif
+    //use water ele scrolls if you have them, else use regs
+    if @findtype 0x1f6c 'any' 'backpack'
+      usetype 0x1f6c any 'backpack'
+    else
+      cast "Summon Water Elemental"
+    endif
+    pause 4000
+    //release the water ele if found
+    if @findtype 0x10 'any' 'ground' 1 2
+      @setalias 'elemental' 'found'
+      waitforcontext 'elemental' 5 15000
+      pause 1000
+    endif
+    //reset Vivify timer if it procs
+    if @injournal 'Vivify: Activated.' 'system'
+      settimer 'Vivify' 0
+    endif
+    clearjournal
+    if not @findtype 0xf86 'any' 'backpack'
+      break
+    endif
+  endwhile
+endif
